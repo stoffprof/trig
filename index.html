@@ -94,6 +94,20 @@
       color: #64748b;
     }
 
+    input.angle-display {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #c4b5fd;
+      outline: none;
+      width: 100%;
+      padding: 0 0 2px 0;
+      caret-color: #c4b5fd;
+    }
+
+    input.angle-display:focus {
+      border-bottom-color: #a78bfa;
+    }
+
     /* ── Trig value rows ── */
     .trig-row {
       margin-bottom: 14px;
@@ -262,7 +276,7 @@
     <!-- Angle card -->
     <div class="card">
       <h2>Current Angle</h2>
-      <div class="angle-display" id="angleDisplay">45°</div>
+      <input type="text" id="angleInput" class="angle-display" value="45°">
       <div class="angle-alt" id="angleAlt">≈ 0.785 rad</div>
     </div>
 
@@ -338,11 +352,11 @@
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:#60a5fa"></div>
-          Adjacent side → cos(θ)
+          Adjacent side = r · cos(θ)
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:#f87171"></div>
-          Opposite side → sin(θ)
+          Opposite side = r · sin(θ)
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:#fbbf24; height:2px; border-top:2px dashed #fbbf24; background:none;"></div>
@@ -565,7 +579,8 @@
     ctx.rotate(hypAngle);
     ctx.fillStyle = '#34d399';
     ctx.textAlign = 'center';
-    ctx.fillText(`r = ${r.toFixed(1)}`, 0, -10);
+    // In Q2/Q3 (px<0) the rotated frame flips so -10 lands visually below the line — use +14 instead
+    ctx.fillText(`r = ${r.toFixed(1)}`, 0, px >= 0 ? -10 : 14);
     ctx.restore();
 
     ctx.textBaseline = 'alphabetic';
@@ -629,13 +644,18 @@
   // ── Panel updates ──────────────────────────────────
   function updatePanel(s, c, t) {
     // Angle display
+    const angleInput = document.getElementById('angleInput');
+    if (document.activeElement !== angleInput) {
+      if (useDeg) {
+        angleInput.value = `${Math.round(angleDeg)}°`;
+      } else {
+        angleInput.value = `${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
+      }
+    }
     if (useDeg) {
-      document.getElementById('angleDisplay').textContent = `${Math.round(angleDeg)}°`;
-      document.getElementById('angleAlt').textContent     = `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
+      document.getElementById('angleAlt').textContent = `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
     } else {
-      const r = angleDeg * Math.PI / 180;
-      document.getElementById('angleDisplay').textContent = `${r.toFixed(4)} rad`;
-      document.getElementById('angleAlt').textContent     = `= ${Math.round(angleDeg)}°`;
+      document.getElementById('angleAlt').textContent = `= ${Math.round(angleDeg)}°`;
     }
 
     // Sin
@@ -704,8 +724,8 @@
   });
   canvas.addEventListener('mousemove', e => {
     if (!dragging) return;
-    angleDeg = angleFromCanvas(e.clientX, e.clientY);
-    document.getElementById('angleSlider').value = Math.round(angleDeg);
+    angleDeg = Math.round(angleFromCanvas(e.clientX, e.clientY));
+    document.getElementById('angleSlider').value = angleDeg;
     draw();
   });
   canvas.addEventListener('mouseup',   () => dragging = false);
@@ -720,8 +740,8 @@
     if (!dragging) return;
     e.preventDefault();
     const t = e.touches[0];
-    angleDeg = angleFromCanvas(t.clientX, t.clientY);
-    document.getElementById('angleSlider').value = Math.round(angleDeg);
+    angleDeg = Math.round(angleFromCanvas(t.clientX, t.clientY));
+    document.getElementById('angleSlider').value = angleDeg;
     draw();
   }, { passive: false });
   canvas.addEventListener('touchend', () => dragging = false);
@@ -734,6 +754,22 @@
   document.getElementById('radiusSlider').addEventListener('input', e => {
     radius = parseFloat(e.target.value);
     draw();
+  });
+
+  // Angle text input
+  function applyAngleInput() {
+    const raw = document.getElementById('angleInput').value.trim()
+      .toLowerCase().replace(/°|deg|rad/g, '').trim();
+    const parsed = parseFloat(raw);
+    if (isNaN(parsed)) { draw(); return; } // revert display on bad input
+    const inDeg = useDeg ? parsed : parsed * 180 / Math.PI;
+    angleDeg = ((inDeg % 360) + 360) % 360;
+    document.getElementById('angleSlider').value = Math.round(angleDeg);
+    draw();
+  }
+  document.getElementById('angleInput').addEventListener('change', applyAngleInput);
+  document.getElementById('angleInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('angleInput').blur();
   });
 
   // Units toggle

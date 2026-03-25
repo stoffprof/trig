@@ -1,6 +1,44 @@
 const canvas = document.getElementById('canvas');
 const ctx    = canvas.getContext('2d');
 
+// ── π-fraction helpers ─────────────────────────────
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+// Returns a π-fraction string (e.g. "3π/4") for nice angles,
+// or null if the denominator would be > 12 (falls back to decimal).
+function toRadLabel(deg) {
+  const d = Math.round(deg);
+  if (d === 0) return '0';
+  const g   = gcd(d, 180);
+  const num = d / g;
+  const den = 180 / g;
+  if (den > 12) return null;
+  if (den === 1) return num === 1 ? 'π' : `${num}π`;
+  return num === 1 ? `π/${den}` : `${num}π/${den}`;
+}
+
+// Parses the angle input field → degrees.
+// Accepts: "45", "45°", "pi/4", "π/4", "3pi/2", "1.5708 rad", etc.
+function parseAngleInput(raw) {
+  const str = raw.trim().toLowerCase()
+    .replace(/[°]/g, '').replace(/π/g, 'pi').replace(/\s+/g, '');
+  if (!useDeg) {
+    const m = str.match(/^(-?\d*\.?\d*)pi(?:\/(\d+\.?\d*))?$/);
+    if (m) {
+      const num = (m[1] === '' || m[1] === '-') ? (m[1] === '-' ? -1 : 1) : parseFloat(m[1]);
+      const den = m[2] ? parseFloat(m[2]) : 1;
+      return (num / den) * 180; // (n/d)π rad → (n/d)×180 deg
+    }
+    const rad = parseFloat(str.replace(/rad\b/g, ''));
+    return isNaN(rad) ? NaN : rad * 180 / Math.PI;
+  }
+  return parseFloat(str.replace(/deg\b/g, ''));
+}
+
 // ── State ──────────────────────────────────────────
 let angleDeg = 45;
 let radius   = 1.0;
@@ -384,14 +422,21 @@ function draw() {
 // ── Panel updates ──────────────────────────────────
 function updatePanel(s, c, t) {
   const angleInput = document.getElementById('angleInput');
+  const fracLabel  = toRadLabel(angleDeg);
+  const radDecimal = (angleDeg * Math.PI / 180).toFixed(4);
   if (document.activeElement !== angleInput) {
-    angleInput.value = useDeg
-      ? `${Math.round(angleDeg)}°`
-      : `${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
+    if (useDeg) {
+      angleInput.value = `${Math.round(angleDeg)}°`;
+    } else {
+      angleInput.value = fracLabel ? fracLabel : `${radDecimal} rad`;
+    }
   }
-  document.getElementById('angleAlt').textContent = useDeg
-    ? `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`
-    : `= ${Math.round(angleDeg)}°`;
+  if (useDeg) {
+    document.getElementById('angleAlt').textContent =
+      fracLabel ? `= ${fracLabel}` : `≈ ${radDecimal} rad`;
+  } else {
+    document.getElementById('angleAlt').textContent = `= ${Math.round(angleDeg)}°`;
+  }
 
   document.getElementById('sinVal').textContent = s.toFixed(4);
   document.getElementById('sinFormula').textContent =
@@ -410,7 +455,7 @@ function updatePanel(s, c, t) {
 
   const label = useDeg
     ? `${Math.round(angleDeg)}°`
-    : `${(angleDeg * Math.PI / 180).toFixed(3)} rad`;
+    : (fracLabel ? fracLabel : `${radDecimal} rad`);
   document.getElementById('angleLabel').textContent  = label;
   document.getElementById('radiusLabel').textContent = radius.toFixed(1);
 }
@@ -482,11 +527,8 @@ document.getElementById('radiusSlider').addEventListener('input', e => {
 });
 
 function applyAngleInput() {
-  const raw = document.getElementById('angleInput').value.trim()
-    .toLowerCase().replace(/°|deg|rad/g, '').trim();
-  const parsed = parseFloat(raw);
-  if (isNaN(parsed)) { draw(); return; }
-  const inDeg = useDeg ? parsed : parsed * 180 / Math.PI;
+  const inDeg = parseAngleInput(document.getElementById('angleInput').value);
+  if (isNaN(inDeg)) { draw(); return; }
   angleDeg = ((inDeg % 360) + 360) % 360;
   document.getElementById('angleSlider').value = Math.round(angleDeg);
   draw();

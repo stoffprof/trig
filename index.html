@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trig Explorer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #c4b5fd;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .layout {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 980px;
+    }
+
+    /* ── Canvas ── */
+    .canvas-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    #canvas {
+      display: block;
+      border-radius: 14px;
+      background: #1e293b;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* ── Right column ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 280px;
+      flex-shrink: 0;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+
+    .card h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+
+    /* ── Angle display ── */
+    .angle-display {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #c4b5fd;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .angle-alt {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    /* ── Trig value rows ── */
+    .trig-row {
+      margin-bottom: 14px;
+    }
+
+    .trig-row:last-child { margin-bottom: 0; }
+
+    .trig-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .trig-name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .trig-value {
+      font-size: 1rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .trig-formula {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .bar-track {
+      height: 8px;
+      background: #0f172a;
+      border-radius: 4px;
+      overflow: visible;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.05s, margin-left 0.05s;
+      position: absolute;
+      top: 0;
+    }
+
+    .sin-color  { color: #f87171; }
+    .cos-color  { color: #60a5fa; }
+    .tan-color  { color: #fbbf24; }
+    .hyp-color  { color: #34d399; }
+
+    .bar-sin  { background: #f87171; }
+    .bar-cos  { background: #60a5fa; }
+    .bar-tan  { background: #fbbf24; }
+
+    /* ── Controls ── */
+    .control-row {
+      margin-bottom: 14px;
+    }
+
+    .control-row:last-child { margin-bottom: 0; }
+
+    .control-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .control-row label span {
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #0f172a;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #c4b5fd;
+      cursor: pointer;
+      border: 2px solid #0f172a;
+    }
+
+    /* ── Toggle buttons ── */
+    .toggle-group {
+      display: flex;
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .toggle-group button {
+      flex: 1;
+      padding: 7px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: transparent;
+      color: #64748b;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .toggle-group button.active {
+      background: #c4b5fd;
+      color: #1e293b;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .undef-note {
+      font-size: 0.75rem;
+      color: #f87171;
+      font-style: italic;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Trig Explorer</h1>
+<p class="subtitle">Drag the point on the circle — or use the slider below</p>
+
+<div class="layout">
+  <!-- Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="500" height="500"></canvas>
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-col">
+
+    <!-- Angle card -->
+    <div class="card">
+      <h2>Current Angle</h2>
+      <div class="angle-display" id="angleDisplay">45°</div>
+      <div class="angle-alt" id="angleAlt">≈ 0.785 rad</div>
+    </div>
+
+    <!-- Trig values card -->
+    <div class="card">
+      <h2>Trig Functions</h2>
+
+      <div class="trig-row">
+        <div class="trig-label">
+          <span class="trig-name sin-color">sin(θ)</span>
+          <span class="trig-value sin-color" id="sinVal">0.707</span>
+        </div>
+        <div class="trig-formula" id="sinFormula">opposite / hypotenuse = y / r</div>
+        <div class="bar-track">
+          <div class="bar-fill bar-sin" id="sinBar" style="width:0;left:50%"></div>
+        </div>
+      </div>
+
+      <div class="trig-row">
+        <div class="trig-label">
+          <span class="trig-name cos-color">cos(θ)</span>
+          <span class="trig-value cos-color" id="cosVal">0.707</span>
+        </div>
+        <div class="trig-formula" id="cosFormula">adjacent / hypotenuse = x / r</div>
+        <div class="bar-track">
+          <div class="bar-fill bar-cos" id="cosBar" style="width:0;left:50%"></div>
+        </div>
+      </div>
+
+      <div class="trig-row">
+        <div class="trig-label">
+          <span class="trig-name tan-color">tan(θ)</span>
+          <span class="trig-value tan-color" id="tanVal">1.000</span>
+        </div>
+        <div class="trig-formula" id="tanFormula">opposite / adjacent = y / x</div>
+        <div class="bar-track">
+          <div class="bar-fill bar-tan" id="tanBar" style="width:0;left:50%"></div>
+        </div>
+        <div class="undef-note" id="tanUndef">undefined (division by zero)</div>
+      </div>
+    </div>
+
+    <!-- Controls card -->
+    <div class="card">
+      <h2>Controls</h2>
+
+      <div class="control-row">
+        <label>Angle <span id="angleLabel">45°</span></label>
+        <input type="range" id="angleSlider" min="0" max="360" step="1" value="45">
+      </div>
+
+      <div class="control-row">
+        <label>Radius <span id="radiusLabel">1.0</span></label>
+        <input type="range" id="radiusSlider" min="0.5" max="2.5" step="0.1" value="1">
+      </div>
+
+      <div class="control-row">
+        <label style="margin-bottom:8px">Units</label>
+        <div class="toggle-group">
+          <button id="btnDeg" class="active" onclick="setUnits('deg')">Degrees</button>
+          <button id="btnRad" onclick="setUnits('rad')">Radians</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend card -->
+    <div class="card">
+      <h2>Legend</h2>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#34d399"></div>
+          Hypotenuse (radius r)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#60a5fa"></div>
+          Adjacent side → cos(θ)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f87171"></div>
+          Opposite side → sin(θ)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#fbbf24; height:2px; border-top:2px dashed #fbbf24; background:none;"></div>
+          Tangent = sin / cos
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+
+  // ── State ──────────────────────────────────────────
+  let angleDeg = 45;
+  let radius   = 1.0;
+  let useDeg   = true;
+  let dragging = false;
+
+  // ── Layout ─────────────────────────────────────────
+  const W = 500, H = 500;
+  const cx = W / 2, cy = H / 2;
+  const BASE_SCALE = 150; // pixels per unit at radius=1
+  function scale() { return BASE_SCALE; }
+  function toX(x) { return cx + x * scale(); }
+  function toY(y) { return cy - y * scale(); }
+
+  // ── Draw helpers ───────────────────────────────────
+  function drawGrid() {
+    const maxU = 2.6;
+    ctx.strokeStyle = '#1e3a5f';
+    ctx.lineWidth = 1;
+
+    for (let u = -Math.ceil(maxU); u <= Math.ceil(maxU); u++) {
+      if (u === 0) continue;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(toX(u), toY(-maxU));
+      ctx.lineTo(toX(u), toY(maxU));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(toX(-maxU), toY(u));
+      ctx.lineTo(toX(maxU),  toY(u));
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAxes() {
+    const maxU = 2.6;
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+
+    // X axis
+    ctx.beginPath();
+    ctx.moveTo(toX(-maxU), toY(0));
+    ctx.lineTo(toX(maxU),  toY(0));
+    ctx.stroke();
+
+    // Y axis
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(-maxU));
+    ctx.lineTo(toX(0), toY(maxU));
+    ctx.stroke();
+
+    // Arrowheads
+    drawArrow(toX(maxU), toY(0), 0);
+    drawArrow(toX(0), toY(maxU), -Math.PI / 2);
+
+    // Axis labels
+    ctx.fillStyle = '#475569';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('x', toX(maxU) + 8, toY(0) + 5);
+    ctx.textAlign = 'center';
+    ctx.fillText('y', toX(0), toY(maxU) - 10);
+
+    // Tick labels
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    for (let u = -2; u <= 2; u++) {
+      if (u === 0) continue;
+      ctx.fillText(u, toX(u), toY(0) + 16);
+      ctx.textAlign = 'right';
+      ctx.fillText(u, toX(0) - 8, toY(u) + 4);
+      ctx.textAlign = 'center';
+    }
+  }
+
+  function drawArrow(x, y, angle) {
+    const size = 8;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = '#334155';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-size, -size / 2);
+    ctx.lineTo(-size,  size / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCircle(r) {
+    ctx.strokeStyle = '#3b4f6b';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.arc(toX(0), toY(0), r * scale(), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawAngleArc(rad, r) {
+    const arcR = Math.min(40, r * scale() * 0.3);
+    ctx.strokeStyle = '#c4b5fd';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(toX(0), toY(0), arcR, -rad, 0, rad < 0);
+    ctx.stroke();
+
+    // Small θ label
+    const midAngle = rad / 2;
+    const lx = toX(0) + (arcR + 12) * Math.cos(-midAngle);
+    const ly = toY(0) + (arcR + 12) * Math.sin(-midAngle);
+    ctx.fillStyle = '#c4b5fd';
+    ctx.font = 'italic 13px Segoe UI, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('θ', lx, ly);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawTriangle(px, py, rad, r) {
+    const ox = toX(0),  oy = toY(0);
+    const tx = toX(px), ty = toY(py);
+    const fx = toX(px), fy = toY(0); // foot of perpendicular
+
+    // Right-angle box at foot
+    if (Math.abs(py) > 0.01 && Math.abs(px) > 0.01) {
+      const boxSize = 8 * Math.sign(px);
+      const boxSizeY = 8 * Math.sign(py);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy - boxSizeY);
+      ctx.lineTo(fx - boxSize, fy - boxSizeY);
+      ctx.lineTo(fx - boxSize, fy);
+      ctx.stroke();
+    }
+
+    // Adjacent side (cos) — blue
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(fx, fy);
+    ctx.stroke();
+
+    // Opposite side (sin) — red
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+
+    // Hypotenuse — green
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+
+    // Dashed projection lines to axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx, oy);  // project to x-axis
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(ox, ty);  // project to y-axis
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── Side labels ──
+    ctx.font = 'bold 12px Segoe UI, sans-serif';
+
+    // Adjacent label
+    const adjMidX = (ox + fx) / 2;
+    const adjOffY  = py >= 0 ? 18 : -10;
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const adjLen = (r * Math.abs(Math.cos(rad))).toFixed(3);
+    ctx.fillText(`adj = ${adjLen}`, adjMidX, fy + adjOffY);
+
+    // Opposite label
+    const oppMidY = (ty + fy) / 2;
+    const oppOffX  = px >= 0 ? 48 : -48;
+    ctx.fillStyle = '#f87171';
+    ctx.textAlign = 'center';
+    const oppLen = (r * Math.abs(Math.sin(rad))).toFixed(3);
+    ctx.fillText(`opp = ${oppLen}`, tx + oppOffX, oppMidY);
+
+    // Hypotenuse label
+    const hypMidX = (ox + tx) / 2;
+    const hypMidY = (oy + ty) / 2;
+    const hypAngle = Math.atan2(ty - oy, tx - ox);
+    ctx.save();
+    ctx.translate(hypMidX, hypMidY);
+    ctx.rotate(hypAngle);
+    ctx.fillStyle = '#34d399';
+    ctx.textAlign = 'center';
+    ctx.fillText(`r = ${r.toFixed(1)}`, 0, -10);
+    ctx.restore();
+
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawPoint(px, py, r) {
+    const tx = toX(px), ty = toY(py);
+
+    // Glow
+    const grd = ctx.createRadialGradient(tx, ty, 2, tx, ty, 16);
+    grd.addColorStop(0, 'rgba(196,181,253,0.5)');
+    grd.addColorStop(1, 'rgba(196,181,253,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dot
+    ctx.fillStyle = '#c4b5fd';
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Coordinate label
+    const xVal = px.toFixed(2);
+    const yVal = py.toFixed(2);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = px >= 0 ? 'left' : 'right';
+    ctx.textBaseline = 'bottom';
+    const offX = px >= 0 ? 12 : -12;
+    const offY = py >= 0 ? -12 :  18;
+    ctx.fillText(`(${xVal}, ${yVal})`, tx + offX, ty + offY);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  // ── Main draw ──────────────────────────────────────
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    const rad = angleDeg * Math.PI / 180;
+    const px  = radius * Math.cos(rad);
+    const py  = radius * Math.sin(rad);
+    const s   = Math.sin(rad);
+    const c   = Math.cos(rad);
+    const t   = Math.tan(rad);
+
+    drawGrid();
+    drawAxes();
+    drawCircle(radius);
+    drawTriangle(px, py, rad, radius);
+    drawAngleArc(rad, radius);
+    drawPoint(px, py, radius);
+
+    updatePanel(s, c, t);
+  }
+
+  // ── Panel updates ──────────────────────────────────
+  function updatePanel(s, c, t) {
+    // Angle display
+    if (useDeg) {
+      document.getElementById('angleDisplay').textContent = `${Math.round(angleDeg)}°`;
+      document.getElementById('angleAlt').textContent     = `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
+    } else {
+      const r = angleDeg * Math.PI / 180;
+      document.getElementById('angleDisplay').textContent = `${r.toFixed(4)} rad`;
+      document.getElementById('angleAlt').textContent     = `= ${Math.round(angleDeg)}°`;
+    }
+
+    // Sin
+    document.getElementById('sinVal').textContent = s.toFixed(4);
+    document.getElementById('sinFormula').textContent = `opposite / hypotenuse  =  y / r  =  ${(radius * s).toFixed(3)} / ${radius.toFixed(1)}`;
+    setBar('sinBar', s, 1);
+
+    // Cos
+    document.getElementById('cosVal').textContent = c.toFixed(4);
+    document.getElementById('cosFormula').textContent = `adjacent / hypotenuse  =  x / r  =  ${(radius * c).toFixed(3)} / ${radius.toFixed(1)}`;
+    setBar('cosBar', c, 1);
+
+    // Tan
+    const tanUndef = Math.abs(c) < 0.005;
+    document.getElementById('tanVal').textContent = tanUndef ? 'undefined' : t.toFixed(4);
+    document.getElementById('tanFormula').textContent = `opposite / adjacent  =  y / x  =  sin(θ) / cos(θ)`;
+    document.getElementById('tanUndef').style.display = tanUndef ? 'block' : 'none';
+    setBar('tanBar', tanUndef ? 0 : Math.max(-3, Math.min(3, t)), 3);
+
+    // Slider label
+    const label = useDeg ? `${Math.round(angleDeg)}°` : `${(angleDeg * Math.PI / 180).toFixed(3)} rad`;
+    document.getElementById('angleLabel').textContent = label;
+    document.getElementById('radiusLabel').textContent = radius.toFixed(1);
+  }
+
+  function setBar(id, value, maxAbs) {
+    const el = document.getElementById(id);
+    const pct = Math.abs(value) / maxAbs * 50; // % of half-width
+    el.style.width = pct + '%';
+    if (value >= 0) {
+      el.style.left  = '50%';
+    } else {
+      el.style.left  = (50 - pct) + '%';
+    }
+  }
+
+  // ── Interaction ────────────────────────────────────
+  function angleFromCanvas(ex, ey) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = ex - rect.left;
+    const my = ey - rect.top;
+    // Scale mouse coords to canvas coords
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const dx = (mx * scaleX) - cx;
+    const dy = cy - (my * scaleY);
+    let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (deg < 0) deg += 360;
+    return deg;
+  }
+
+  function hitPoint(ex, ey) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const mx = (ex - rect.left) * scaleX;
+    const my = (ey - rect.top)  * scaleY;
+    const rad = angleDeg * Math.PI / 180;
+    const px  = toX(radius * Math.cos(rad));
+    const py  = toY(radius * Math.sin(rad));
+    return Math.hypot(mx - px, my - py) < 20;
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    if (hitPoint(e.clientX, e.clientY)) { dragging = true; e.preventDefault(); }
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    angleDeg = angleFromCanvas(e.clientX, e.clientY);
+    document.getElementById('angleSlider').value = Math.round(angleDeg);
+    draw();
+  });
+  canvas.addEventListener('mouseup',   () => dragging = false);
+  canvas.addEventListener('mouseleave',() => dragging = false);
+
+  // Touch
+  canvas.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    if (hitPoint(t.clientX, t.clientY)) { dragging = true; e.preventDefault(); }
+  }, { passive: false });
+  canvas.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    angleDeg = angleFromCanvas(t.clientX, t.clientY);
+    document.getElementById('angleSlider').value = Math.round(angleDeg);
+    draw();
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => dragging = false);
+
+  // Sliders
+  document.getElementById('angleSlider').addEventListener('input', e => {
+    angleDeg = parseFloat(e.target.value);
+    draw();
+  });
+  document.getElementById('radiusSlider').addEventListener('input', e => {
+    radius = parseFloat(e.target.value);
+    draw();
+  });
+
+  // Units toggle
+  function setUnits(unit) {
+    useDeg = unit === 'deg';
+    document.getElementById('btnDeg').classList.toggle('active', useDeg);
+    document.getElementById('btnRad').classList.toggle('active', !useDeg);
+    draw();
+  }
+
+  // Initial draw
+  draw();
+</script>
+</body>
+</html>

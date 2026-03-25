@@ -25,6 +25,7 @@ h1 {
   margin-bottom: 24px;
 }
 
+/* ── Three-column layout ── */
 .layout {
   display: flex;
   gap: 20px;
@@ -35,12 +36,22 @@ h1 {
   max-width: 980px;
 }
 
-/* ── Canvas ── */
-.canvas-wrap {
-  position: relative;
+.side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 220px;
   flex-shrink: 0;
 }
 
+.center-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Main canvas ── */
 #canvas {
   display: block;
   border-radius: 14px;
@@ -49,15 +60,19 @@ h1 {
   touch-action: none;
 }
 
-/* ── Right column ── */
-.right-col {
+/* ── Function graphs ── */
+.graphs-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 280px;
-  flex-shrink: 0;
+  gap: 10px;
 }
 
+.graphs-row canvas {
+  display: block;
+  border-radius: 10px;
+  background: #1e293b;
+}
+
+/* ── Cards ── */
 .card {
   background: #1e293b;
   border-radius: 14px;
@@ -226,7 +241,7 @@ input[type=range]::-webkit-slider-thumb {
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .legend-item {

@@ -10,7 +10,7 @@ let dragging = false;
 // ── Layout ─────────────────────────────────────────
 const W = 500, H = 500;
 const cx = W / 2, cy = H / 2;
-const BASE_SCALE = 150; // pixels per unit at radius=1
+const BASE_SCALE = 150; // pixels per unit
 function scale() { return BASE_SCALE; }
 function toX(x) { return cx + x * scale(); }
 function toY(y) { return cy - y * scale(); }
@@ -41,23 +41,19 @@ function drawAxes() {
   ctx.strokeStyle = '#334155';
   ctx.lineWidth = 1.5;
 
-  // X axis
   ctx.beginPath();
   ctx.moveTo(toX(-maxU), toY(0));
   ctx.lineTo(toX(maxU),  toY(0));
   ctx.stroke();
 
-  // Y axis
   ctx.beginPath();
   ctx.moveTo(toX(0), toY(-maxU));
   ctx.lineTo(toX(0), toY(maxU));
   ctx.stroke();
 
-  // Arrowheads
   drawArrow(toX(maxU), toY(0), 0);
   drawArrow(toX(0), toY(maxU), -Math.PI / 2);
 
-  // Axis labels
   ctx.fillStyle = '#475569';
   ctx.font = '13px Segoe UI, sans-serif';
   ctx.textAlign = 'left';
@@ -65,7 +61,6 @@ function drawAxes() {
   ctx.textAlign = 'center';
   ctx.fillText('y', toX(0), toY(maxU) - 10);
 
-  // Tick labels
   ctx.fillStyle = '#475569';
   ctx.font = '11px Segoe UI, sans-serif';
   ctx.textAlign = 'center';
@@ -111,7 +106,6 @@ function drawAngleArc(rad, r) {
   ctx.arc(toX(0), toY(0), arcR, -rad, 0, rad < 0);
   ctx.stroke();
 
-  // Small θ label
   const midAngle = rad / 2;
   const lx = toX(0) + (arcR + 12) * Math.cos(-midAngle);
   const ly = toY(0) + (arcR + 12) * Math.sin(-midAngle);
@@ -126,11 +120,11 @@ function drawAngleArc(rad, r) {
 function drawTriangle(px, py, rad, r) {
   const ox = toX(0),  oy = toY(0);
   const tx = toX(px), ty = toY(py);
-  const fx = toX(px), fy = toY(0); // foot of perpendicular
+  const fx = toX(px), fy = toY(0);
 
   // Right-angle box at foot
   if (Math.abs(py) > 0.01 && Math.abs(px) > 0.01) {
-    const boxSize = 8 * Math.sign(px);
+    const boxSize  = 8 * Math.sign(px);
     const boxSizeY = 8 * Math.sign(py);
     ctx.strokeStyle = '#475569';
     ctx.lineWidth = 1;
@@ -141,7 +135,7 @@ function drawTriangle(px, py, rad, r) {
     ctx.stroke();
   }
 
-  // Adjacent side (cos) — blue
+  // Adjacent (cos) — blue
   ctx.strokeStyle = '#60a5fa';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -149,7 +143,7 @@ function drawTriangle(px, py, rad, r) {
   ctx.lineTo(fx, fy);
   ctx.stroke();
 
-  // Opposite side (sin) — red
+  // Opposite (sin) — red
   ctx.strokeStyle = '#f87171';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -171,35 +165,30 @@ function drawTriangle(px, py, rad, r) {
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
   ctx.moveTo(tx, ty);
-  ctx.lineTo(tx, oy);  // project to x-axis
+  ctx.lineTo(tx, oy);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(tx, ty);
-  ctx.lineTo(ox, ty);  // project to y-axis
+  ctx.lineTo(ox, ty);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // ── Side labels ──
+  // Side labels
   ctx.font = 'bold 12px Segoe UI, sans-serif';
 
-  // Adjacent label
   const adjMidX = (ox + fx) / 2;
   const adjOffY  = py >= 0 ? 18 : -10;
   ctx.fillStyle = '#60a5fa';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const adjLen = (r * Math.abs(Math.cos(rad))).toFixed(3);
-  ctx.fillText(`adj = ${adjLen}`, adjMidX, fy + adjOffY);
+  ctx.fillText(`adj = ${(r * Math.abs(Math.cos(rad))).toFixed(3)}`, adjMidX, fy + adjOffY);
 
-  // Opposite label
   const oppMidY = (ty + fy) / 2;
   const oppOffX  = px >= 0 ? 48 : -48;
   ctx.fillStyle = '#f87171';
   ctx.textAlign = 'center';
-  const oppLen = (r * Math.abs(Math.sin(rad))).toFixed(3);
-  ctx.fillText(`opp = ${oppLen}`, tx + oppOffX, oppMidY);
+  ctx.fillText(`opp = ${(r * Math.abs(Math.sin(rad))).toFixed(3)}`, tx + oppOffX, oppMidY);
 
-  // Hypotenuse label
   const hypMidX = (ox + tx) / 2;
   const hypMidY = (oy + ty) / 2;
   const hypAngle = Math.atan2(ty - oy, tx - ox);
@@ -208,17 +197,15 @@ function drawTriangle(px, py, rad, r) {
   ctx.rotate(hypAngle);
   ctx.fillStyle = '#34d399';
   ctx.textAlign = 'center';
-  // In Q2/Q3 (px<0) the rotated frame flips so -10 lands visually below the line — use +14 instead
   ctx.fillText(`r = ${r.toFixed(1)}`, 0, px >= 0 ? -10 : 14);
   ctx.restore();
 
   ctx.textBaseline = 'alphabetic';
 }
 
-function drawPoint(px, py, r) {
+function drawPoint(px, py) {
   const tx = toX(px), ty = toY(py);
 
-  // Glow
   const grd = ctx.createRadialGradient(tx, ty, 2, tx, ty, 16);
   grd.addColorStop(0, 'rgba(196,181,253,0.5)');
   grd.addColorStop(1, 'rgba(196,181,253,0)');
@@ -227,7 +214,6 @@ function drawPoint(px, py, r) {
   ctx.arc(tx, ty, 16, 0, Math.PI * 2);
   ctx.fill();
 
-  // Dot
   ctx.fillStyle = '#c4b5fd';
   ctx.strokeStyle = '#0f172a';
   ctx.lineWidth = 2;
@@ -236,17 +222,139 @@ function drawPoint(px, py, r) {
   ctx.fill();
   ctx.stroke();
 
-  // Coordinate label
-  const xVal = px.toFixed(2);
-  const yVal = py.toFixed(2);
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '12px Segoe UI, sans-serif';
   ctx.textAlign = px >= 0 ? 'left' : 'right';
   ctx.textBaseline = 'bottom';
   const offX = px >= 0 ? 12 : -12;
   const offY = py >= 0 ? -12 :  18;
-  ctx.fillText(`(${xVal}, ${yVal})`, tx + offX, ty + offY);
+  ctx.fillText(`(${px.toFixed(2)}, ${py.toFixed(2)})`, tx + offX, ty + offY);
   ctx.textBaseline = 'alphabetic';
+}
+
+// ── Function graphs ─────────────────────────────────
+function drawFunctionGraph(canvasId, trigFn, color, title) {
+  const gc = document.getElementById(canvasId);
+  if (!gc) return;
+  const g  = gc.getContext('2d');
+  const GW = gc.width, GH = gc.height;
+
+  const pad = { left: 28, right: 8, top: 20, bottom: 26 };
+  const pw = GW - pad.left - pad.right;
+  const ph = GH - pad.top  - pad.bottom;
+
+  // deg → canvas x;  value (-1..1) → canvas y
+  const gx = (deg) => pad.left + (deg / 360) * pw;
+  const gy = (val) => pad.top  + (ph / 2) * (1 - val);
+
+  // Background
+  g.fillStyle = '#1e293b';
+  g.fillRect(0, 0, GW, GH);
+
+  // Horizontal reference lines at -1, 0, +1
+  [-1, 0, 1].forEach(v => {
+    g.strokeStyle = v === 0 ? '#475569' : '#293548';
+    g.lineWidth   = v === 0 ? 1.5 : 1;
+    g.beginPath();
+    g.moveTo(pad.left, gy(v));
+    g.lineTo(pad.left + pw, gy(v));
+    g.stroke();
+  });
+
+  // Vertical grid lines at 90°, 180°, 270°
+  g.strokeStyle = '#293548';
+  g.lineWidth = 1;
+  g.setLineDash([3, 3]);
+  [90, 180, 270].forEach(deg => {
+    g.beginPath();
+    g.moveTo(gx(deg), pad.top);
+    g.lineTo(gx(deg), pad.top + ph);
+    g.stroke();
+  });
+  g.setLineDash([]);
+
+  // Curve
+  g.strokeStyle = color;
+  g.lineWidth = 2;
+  g.beginPath();
+  for (let d = 0; d <= 360; d += 0.5) {
+    const x = gx(d);
+    const y = gy(trigFn(d * Math.PI / 180));
+    d === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+  }
+  g.stroke();
+
+  // Current angle marker
+  const curVal  = trigFn(angleDeg * Math.PI / 180);
+  const markerX = gx(angleDeg);
+  const markerY = gy(curVal);
+
+  // Dashed horizontal line at current value
+  g.globalAlpha = 0.35;
+  g.strokeStyle = color;
+  g.lineWidth = 1;
+  g.setLineDash([3, 3]);
+  g.beginPath();
+  g.moveTo(pad.left, markerY);
+  g.lineTo(pad.left + pw, markerY);
+  g.stroke();
+  g.setLineDash([]);
+  g.globalAlpha = 1;
+
+  // Dashed vertical line at current angle (purple)
+  g.strokeStyle = '#c4b5fd';
+  g.lineWidth = 1.5;
+  g.setLineDash([4, 3]);
+  g.beginPath();
+  g.moveTo(markerX, pad.top);
+  g.lineTo(markerX, pad.top + ph);
+  g.stroke();
+  g.setLineDash([]);
+
+  // Dot on curve
+  g.fillStyle = color;
+  g.strokeStyle = '#0f172a';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.arc(markerX, markerY, 5, 0, Math.PI * 2);
+  g.fill();
+  g.stroke();
+
+  // Y-axis labels
+  g.fillStyle = '#64748b';
+  g.font = '10px Segoe UI, sans-serif';
+  g.textBaseline = 'middle';
+  [[1,'1'], [0,'0'], [-1,'-1']].forEach(([v, lbl]) => {
+    g.textAlign = 'right';
+    g.fillText(lbl, pad.left - 3, gy(v));
+  });
+
+  // X-axis labels
+  const ticks = useDeg
+    ? [[0,'0°'], [90,'90°'], [180,'180°'], [270,'270°'], [360,'360°']]
+    : [[0,'0'], [90,'π/2'], [180,'π'], [270,'3π/2'], [360,'2π']];
+  g.fillStyle = '#64748b';
+  g.font = '10px Segoe UI, sans-serif';
+  g.textBaseline = 'top';
+  ticks.forEach(([deg, lbl], i) => {
+    g.textAlign = i === 0 ? 'left' : i === ticks.length - 1 ? 'right' : 'center';
+    g.fillText(lbl, gx(deg), pad.top + ph + 5);
+  });
+
+  // Graph title (top-left)
+  g.fillStyle = color;
+  g.font = 'bold 11px Segoe UI, sans-serif';
+  g.textAlign = 'left';
+  g.textBaseline = 'top';
+  g.fillText(title, pad.left + 2, 4);
+
+  // Current value (top-right)
+  g.fillStyle = '#e2e8f0';
+  g.font = '10px Segoe UI, sans-serif';
+  g.textAlign = 'right';
+  g.fillText(`= ${curVal.toFixed(4)}`, GW - pad.right, 4);
+
+  g.textBaseline = 'alphabetic';
 }
 
 // ── Main draw ──────────────────────────────────────
@@ -265,79 +373,69 @@ function draw() {
   drawCircle(radius);
   drawTriangle(px, py, rad, radius);
   drawAngleArc(rad, radius);
-  drawPoint(px, py, radius);
+  drawPoint(px, py);
+
+  drawFunctionGraph('sinGraph', Math.sin, '#f87171', 'sin(θ)');
+  drawFunctionGraph('cosGraph', Math.cos, '#60a5fa', 'cos(θ)');
 
   updatePanel(s, c, t);
 }
 
 // ── Panel updates ──────────────────────────────────
 function updatePanel(s, c, t) {
-  // Angle display
   const angleInput = document.getElementById('angleInput');
   if (document.activeElement !== angleInput) {
-    if (useDeg) {
-      angleInput.value = `${Math.round(angleDeg)}°`;
-    } else {
-      angleInput.value = `${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
-    }
+    angleInput.value = useDeg
+      ? `${Math.round(angleDeg)}°`
+      : `${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
   }
-  if (useDeg) {
-    document.getElementById('angleAlt').textContent = `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`;
-  } else {
-    document.getElementById('angleAlt').textContent = `= ${Math.round(angleDeg)}°`;
-  }
+  document.getElementById('angleAlt').textContent = useDeg
+    ? `≈ ${(angleDeg * Math.PI / 180).toFixed(4)} rad`
+    : `= ${Math.round(angleDeg)}°`;
 
-  // Sin
   document.getElementById('sinVal').textContent = s.toFixed(4);
-  document.getElementById('sinFormula').textContent = `opposite / hypotenuse  =  y / r  =  ${(radius * s).toFixed(3)} / ${radius.toFixed(1)}`;
+  document.getElementById('sinFormula').textContent =
+    `opposite / hypotenuse  =  y / r  =  ${(radius * s).toFixed(3)} / ${radius.toFixed(1)}`;
   setBar('sinBar', s, 1);
 
-  // Cos
   document.getElementById('cosVal').textContent = c.toFixed(4);
-  document.getElementById('cosFormula').textContent = `adjacent / hypotenuse  =  x / r  =  ${(radius * c).toFixed(3)} / ${radius.toFixed(1)}`;
+  document.getElementById('cosFormula').textContent =
+    `adjacent / hypotenuse  =  x / r  =  ${(radius * c).toFixed(3)} / ${radius.toFixed(1)}`;
   setBar('cosBar', c, 1);
 
-  // Tan
   const tanUndef = Math.abs(c) < 0.005;
   document.getElementById('tanVal').textContent = tanUndef ? 'undefined' : t.toFixed(4);
-  document.getElementById('tanFormula').textContent = `opposite / adjacent  =  y / x  =  sin(θ) / cos(θ)`;
   document.getElementById('tanUndef').style.display = tanUndef ? 'block' : 'none';
   setBar('tanBar', tanUndef ? 0 : Math.max(-3, Math.min(3, t)), 3);
 
-  // Slider label
-  const label = useDeg ? `${Math.round(angleDeg)}°` : `${(angleDeg * Math.PI / 180).toFixed(3)} rad`;
-  document.getElementById('angleLabel').textContent = label;
+  const label = useDeg
+    ? `${Math.round(angleDeg)}°`
+    : `${(angleDeg * Math.PI / 180).toFixed(3)} rad`;
+  document.getElementById('angleLabel').textContent  = label;
   document.getElementById('radiusLabel').textContent = radius.toFixed(1);
 }
 
 function setBar(id, value, maxAbs) {
-  const el = document.getElementById(id);
-  const pct = Math.abs(value) / maxAbs * 50; // % of half-width
+  const el  = document.getElementById(id);
+  const pct = Math.abs(value) / maxAbs * 50;
   el.style.width = pct + '%';
-  if (value >= 0) {
-    el.style.left  = '50%';
-  } else {
-    el.style.left  = (50 - pct) + '%';
-  }
+  el.style.left  = value >= 0 ? '50%' : (50 - pct) + '%';
 }
 
 // ── Interaction ────────────────────────────────────
 function angleFromCanvas(ex, ey) {
-  const rect = canvas.getBoundingClientRect();
-  const mx = ex - rect.left;
-  const my = ey - rect.top;
-  // Scale mouse coords to canvas coords
+  const rect   = canvas.getBoundingClientRect();
   const scaleX = W / rect.width;
   const scaleY = H / rect.height;
-  const dx = (mx * scaleX) - cx;
-  const dy = cy - (my * scaleY);
+  const dx = (ex - rect.left) * scaleX - cx;
+  const dy = cy - (ey - rect.top)  * scaleY;
   let deg = Math.atan2(dy, dx) * 180 / Math.PI;
   if (deg < 0) deg += 360;
   return deg;
 }
 
 function hitPoint(ex, ey) {
-  const rect = canvas.getBoundingClientRect();
+  const rect   = canvas.getBoundingClientRect();
   const scaleX = W / rect.width;
   const scaleY = H / rect.height;
   const mx = (ex - rect.left) * scaleX;
@@ -357,10 +455,9 @@ canvas.addEventListener('mousemove', e => {
   document.getElementById('angleSlider').value = angleDeg;
   draw();
 });
-canvas.addEventListener('mouseup',   () => dragging = false);
-canvas.addEventListener('mouseleave',() => dragging = false);
+canvas.addEventListener('mouseup',    () => dragging = false);
+canvas.addEventListener('mouseleave', () => dragging = false);
 
-// Touch
 canvas.addEventListener('touchstart', e => {
   const t = e.touches[0];
   if (hitPoint(t.clientX, t.clientY)) { dragging = true; e.preventDefault(); }
@@ -375,7 +472,6 @@ canvas.addEventListener('touchmove', e => {
 }, { passive: false });
 canvas.addEventListener('touchend', () => dragging = false);
 
-// Sliders
 document.getElementById('angleSlider').addEventListener('input', e => {
   angleDeg = parseFloat(e.target.value);
   draw();
@@ -385,12 +481,11 @@ document.getElementById('radiusSlider').addEventListener('input', e => {
   draw();
 });
 
-// Angle text input
 function applyAngleInput() {
   const raw = document.getElementById('angleInput').value.trim()
     .toLowerCase().replace(/°|deg|rad/g, '').trim();
   const parsed = parseFloat(raw);
-  if (isNaN(parsed)) { draw(); return; } // revert display on bad input
+  if (isNaN(parsed)) { draw(); return; }
   const inDeg = useDeg ? parsed : parsed * 180 / Math.PI;
   angleDeg = ((inDeg % 360) + 360) % 360;
   document.getElementById('angleSlider').value = Math.round(angleDeg);
@@ -401,7 +496,6 @@ document.getElementById('angleInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('angleInput').blur();
 });
 
-// Units toggle
 function setUnits(unit) {
   useDeg = unit === 'deg';
   document.getElementById('btnDeg').classList.toggle('active', useDeg);
@@ -409,5 +503,4 @@ function setUnits(unit) {
   draw();
 }
 
-// Initial draw
 draw();

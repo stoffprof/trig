@@ -12,22 +12,52 @@
 <p class="subtitle">Drag the point on the circle — or use the slider below</p>
 
 <div class="layout">
-  <!-- Canvas -->
-  <div class="canvas-wrap">
-    <canvas id="canvas" width="500" height="500"></canvas>
-  </div>
 
-  <!-- Right panel -->
-  <div class="right-col">
+  <!-- Left panel -->
+  <div class="side-col">
 
-    <!-- Angle card -->
     <div class="card">
       <h2>Current Angle</h2>
       <input type="text" id="angleInput" class="angle-display" value="45°">
       <div class="angle-alt" id="angleAlt">≈ 0.785 rad</div>
     </div>
 
-    <!-- Trig values card -->
+    <div class="card">
+      <h2>Legend</h2>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#34d399"></div>
+          Hypotenuse (radius r)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#60a5fa"></div>
+          Adjacent side = r · cos(θ)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f87171"></div>
+          Opposite side = r · sin(θ)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#fbbf24"></div>
+          Tangent = sin / cos
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Center panel -->
+  <div class="center-col">
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <div class="graphs-row">
+      <canvas id="sinGraph" width="245" height="140"></canvas>
+      <canvas id="cosGraph" width="245" height="140"></canvas>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="side-col">
+
     <div class="card">
       <h2>Trig Functions</h2>
 
@@ -66,7 +96,6 @@
       </div>
     </div>
 
-    <!-- Controls card -->
     <div class="card">
       <h2>Controls</h2>
 
@@ -89,30 +118,8 @@
       </div>
     </div>
 
-    <!-- Legend card -->
-    <div class="card">
-      <h2>Legend</h2>
-      <div class="legend">
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#34d399"></div>
-          Hypotenuse (radius r)
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#60a5fa"></div>
-          Adjacent side = r · cos(θ)
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#f87171"></div>
-          Opposite side = r · sin(θ)
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#fbbf24; height:2px; border-top:2px dashed #fbbf24; background:none;"></div>
-          Tangent = sin / cos
-        </div>
-      </div>
-    </div>
-
   </div>
+
 </div>
 
 <script src="script.js"></script>

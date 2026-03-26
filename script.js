@@ -21,6 +21,27 @@ function toRadLabel(deg) {
   return num === 1 ? `π/${den}` : `${num}π/${den}`;
 }
 
+// Returns a √2-fraction string (e.g. "1/√2", "√2") for values that are
+// multiples of 1/√2, or null otherwise.
+function toSqrt2Label(v) {
+  const EPS = 1e-9;
+  for (let n = 1; n <= 8; n++) {
+    const pos = n / Math.SQRT2;
+    if (Math.abs(v - pos) < EPS) return n === 2 ? '√2'  : n === 1 ? '1/√2'  : `${n}/√2`;
+    if (Math.abs(v + pos) < EPS) return n === 2 ? '-√2' : n === 1 ? '-1/√2' : `-${n}/√2`;
+  }
+  return null;
+}
+
+// Format a trig value: use √2 notation in radians mode when applicable.
+function fmtVal(v, decimals = 4) {
+  if (!useDeg) {
+    const lbl = toSqrt2Label(v);
+    if (lbl) return lbl;
+  }
+  return v.toFixed(decimals);
+}
+
 // Parses the angle input field → degrees.
 // Accepts: "45", "45°", "pi/4", "π/4", "3pi/2", "1.5708 rad", etc.
 function parseAngleInput(raw) {
@@ -232,10 +253,14 @@ function drawTriangle(px, py, rad, r) {
   const hypAngle = Math.atan2(ty - oy, tx - ox);
   ctx.save();
   ctx.translate(hypMidX, hypMidY);
-  ctx.rotate(hypAngle);
+  // Normalize to [-π/2, π/2] so text is never upside-down in Q2/Q3
+  let labelAngle = hypAngle;
+  if (labelAngle >  Math.PI / 2) labelAngle -= Math.PI;
+  if (labelAngle < -Math.PI / 2) labelAngle += Math.PI;
+  ctx.rotate(labelAngle);
   ctx.fillStyle = '#34d399';
   ctx.textAlign = 'center';
-  ctx.fillText(`r = ${r.toFixed(1)}`, 0, px >= 0 ? -10 : 14);
+  ctx.fillText(`r = ${r.toFixed(1)}`, 0, -10);
   ctx.restore();
 
   ctx.textBaseline = 'alphabetic';
@@ -438,18 +463,18 @@ function updatePanel(s, c, t) {
     document.getElementById('angleAlt').textContent = `= ${Math.round(angleDeg)}°`;
   }
 
-  document.getElementById('sinVal').textContent = s.toFixed(4);
+  document.getElementById('sinVal').textContent = fmtVal(s);
   document.getElementById('sinFormula').textContent =
-    `opposite / hypotenuse  =  y / r  =  ${(radius * s).toFixed(3)} / ${radius.toFixed(1)}`;
+    `opposite / hypotenuse  =  y / r  =  ${fmtVal(radius * s, 3)} / ${radius.toFixed(1)}`;
   setBar('sinBar', s, 1);
 
-  document.getElementById('cosVal').textContent = c.toFixed(4);
+  document.getElementById('cosVal').textContent = fmtVal(c);
   document.getElementById('cosFormula').textContent =
-    `adjacent / hypotenuse  =  x / r  =  ${(radius * c).toFixed(3)} / ${radius.toFixed(1)}`;
+    `adjacent / hypotenuse  =  x / r  =  ${fmtVal(radius * c, 3)} / ${radius.toFixed(1)}`;
   setBar('cosBar', c, 1);
 
   const tanUndef = Math.abs(c) < 0.005;
-  document.getElementById('tanVal').textContent = tanUndef ? 'undefined' : t.toFixed(4);
+  document.getElementById('tanVal').textContent = tanUndef ? 'undefined' : fmtVal(t);
   document.getElementById('tanUndef').style.display = tanUndef ? 'block' : 'none';
   setBar('tanBar', tanUndef ? 0 : Math.max(-3, Math.min(3, t)), 3);
 
